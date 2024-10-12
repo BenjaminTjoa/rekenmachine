@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekenmachine</title>
+    <link rel="icon" href="images/ico.ico" type="image/x-icon">
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-P4QZMMNFCF"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-P4QZMMNFCF');
+    </script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+        }
+        .calculator {
+            background-color: #000;
+            border-radius: 10px;
+            padding: 20px;
+            width: 240px;
+        }
+        .display {
+            color: white;
+            text-align: right;
+            padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            width: 100%;
+        }
+        .operation {
+            font-size: 20px;
+            min-height: 30px;
+            color: #888;
+        }
+        .result {
+            font-size: 40px;
+            margin-top: 5px;
+            text-align: right;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        button {
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            height: 60px;
+            width: 60px;
+            cursor: pointer;
+            outline: none;
+        }
+        .operator {
+            background-color: #FF9F0A;
+            color: white;
+        }
+        .number, .decimal {
+            background-color: #333333;
+            color: white;
+        }
+        .clear, .sign, .percent {
+            background-color: #A5A5A5;
+            color: black;
+        }
+        .zero {
+            grid-column: span 2;
+            width: 130px;
+            border-radius: 30px;
+            text-align: left;
+            padding-left: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="operation" id="operation"></div>
+            <div class="result" id="display">0</div>
+        </div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">AC</button>
+            <button class="sign" onclick="changeSign()">+/-</button>
+            <button class="percent" onclick="percentage()">%</button>
+            <button class="operator" onclick="setOperation('/')">/</button>
+            <button class="number" onclick="appendNumber(7)">7</button>
+            <button class="number" onclick="appendNumber(8)">8</button>
+            <button class="number" onclick="appendNumber(9)">9</button>
+            <button class="operator" onclick="setOperation('*')">×</button>
+            <button class="number" onclick="appendNumber(4)">4</button>
+            <button class="number" onclick="appendNumber(5)">5</button>
+            <button class="number" onclick="appendNumber(6)">6</button>
+            <button class="operator" onclick="setOperation('-')">-</button>
+            <button class="number" onclick="appendNumber(1)">1</button>
+            <button class="number" onclick="appendNumber(2)">2</button>
+            <button class="number" onclick="appendNumber(3)">3</button>
+            <button class="operator" onclick="setOperation('+')">+</button>
+            <button class="number zero" onclick="appendNumber(0)">0</button>
+            <button class="decimal" onclick="appendDecimal()">.</button>
+            <button class="operator" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let displayValue = '0';
+        let firstOperand = null;
+        let operator = null;
+        let waitingForSecondOperand = false;
+
+        function updateDisplay() {
+            document.getElementById('display').innerText = displayValue;
+        }
+
+        function updateOperation() {
+            let operationDisplay = '';
+            if (firstOperand !== null) {
+                operationDisplay = firstOperand;
+                if (operator !== null) {
+                    operationDisplay += ' ' + operator + ' ';
+                    if (!waitingForSecondOperand) {
+                        operationDisplay += displayValue;
+                    }
+                }
+            }
+            document.getElementById('operation').innerText = operationDisplay;
+        }
+
+        function appendNumber(number) {
+            if (waitingForSecondOperand) {
+                displayValue = String(number);
+                waitingForSecondOperand = false;
+            } else {
+                displayValue = displayValue === '0' ? String(number) : displayValue + number;
+            }
+            updateDisplay();
+            updateOperation();
+        }
+
+        function appendDecimal() {
+            if (!displayValue.includes('.')) {
+                displayValue += '.';
+                updateDisplay();
+            }
+        }
+
+        function clearDisplay() {
+            displayValue = '0';
+            firstOperand = null;
+            operator = null;
+            waitingForSecondOperand = false;
+            updateDisplay();
+            updateOperation();
+        }
+
+        function changeSign() {
+            displayValue = String(-parseFloat(displayValue));
+            updateDisplay();
+            updateOperation();
+        }
+
+        function percentage() {
+            displayValue = String(parseFloat(displayValue) / 100);
+            updateDisplay();
+            updateOperation();
+        }
+
+        function setOperation(op) {
+            if (operator && waitingForSecondOperand) {
+                operator = op;
+                updateOperation();
+                return;
+            }
+
+            if (firstOperand === null) {
+                firstOperand = parseFloat(displayValue);
+            } else if (operator) {
+                const result = calculate();
+                displayValue = String(result);
+                firstOperand = result;
+            }
+
+            waitingForSecondOperand = true;
+            operator = op;
+            updateDisplay();
+            updateOperation();
+        }
+
+        function calculate() {
+            if (operator === null || waitingForSecondOperand) {
+                return;
+            }
+
+            const secondOperand = parseFloat(displayValue);
+            let result;
+
+            switch (operator) {
+                case '+':
+                    result = firstOperand + secondOperand;
+                    break;
+                case '-':
+                    result = firstOperand - secondOperand;
+                    break;
+                case '*':
+                    result = firstOperand * secondOperand;
+                    break;
+                case '/':
+                    result = firstOperand / secondOperand;
+                    break;
+                default:
+                    return;
+            }
+
+            displayValue = String(result);
+            firstOperand = result;
+            operator = null;
+            waitingForSecondOperand = false;
+            updateDisplay();
+            updateOperation();
+        }
+
+        updateDisplay();
+        updateOperation();
+    </script>
+</body>
+</html>
